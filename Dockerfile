@@ -20,7 +20,7 @@ ARG I2PD_VERSION="2.61.0"
 
 ################################################################################
 # i2pd Builder
-FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS i2pd-builder
+FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS i2pd-builder
 ARG I2PD_VERSION
 
 # Install build dependencies
