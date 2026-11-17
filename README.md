@@ -2,7 +2,7 @@
 
 Docker container for [i2pd](https://github.com/PurpleI2P/i2pd) (**<20MB**), the C++ I2P router, built as one statically linked binary with no OS layer.
 
-**Why use this?** The upstream image is a full Alpine with a shell, a package manager and the boost libraries beside the router. This one runs i2pd in a `FROM scratch` environment holding the binary, its reseed certificates and a default config. The source release is checked against the signed `SHA512SUMS` before it builds.
+**Why use this?** The upstream image is a full Alpine with a shell, a package manager and the boost libraries beside the router. This one runs i2pd in a `FROM scratch` environment holding the binary, its reseed certificates and a default config. The source is cloned at its release tag, and the tag signature is checked against the release key before it builds.
 
 ## Running
 
