@@ -16,18 +16,20 @@
 
 ########################################
 # Versions
-ARG I2PD_VERSION="2.61.0"
+ARG I2PD_VERSION="3.0.0"
 
 ################################################################################
 # i2pd Builder
 FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS i2pd-builder
 ARG I2PD_VERSION
 
-# Install build dependencies
+# Install build dependencies. Torrent tunnels link boost json and url, which
+# boost-static carries with the rest of boost.
 RUN apk add --no-cache \
   boost-dev \
   boost-static \
   build-base \
+  git \
   gnupg \
   openssl-dev \
   openssl-libs-static \
@@ -36,18 +38,15 @@ RUN apk add --no-cache \
 
 WORKDIR /src
 
-# Download and verify i2pd. SHA512SUMS lists the tag archive under this name,
-# and the release signs it with the key that signs the tags.
-ADD "https://github.com/PurpleI2P/i2pd/archive/refs/tags/${I2PD_VERSION}.tar.gz" "i2pd-${I2PD_VERSION}.tar.gz"
-ADD "https://github.com/PurpleI2P/i2pd/releases/download/${I2PD_VERSION}/SHA512SUMS" SHA512SUMS
-ADD "https://github.com/PurpleI2P/i2pd/releases/download/${I2PD_VERSION}/SHA512SUMS.asc" SHA512SUMS.asc
+# Releases stopped shipping SHA512SUMS, so the signed tag is what proves the
+# source. Clone it and check its signature against the release key.
 ADD "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x951928BB317024EFD053D73C66F6C87B98EBCFE2" r4sas_gpg_key.asc
-
-# Import the release key, then check the signature and the archive's line
 RUN gpg --batch --yes --import <"r4sas_gpg_key.asc" && \
-  gpg --batch --yes --verify SHA512SUMS.asc SHA512SUMS && \
-  grep " \*i2pd-${I2PD_VERSION}.tar.gz$" SHA512SUMS | sed 's/ \*/  /' | sha512sum -c
-RUN tar -xzf "i2pd-${I2PD_VERSION}.tar.gz" --strip-components=1
+  git clone --quiet --depth 1 --branch "${I2PD_VERSION}" https://github.com/PurpleI2P/i2pd.git i2pd && \
+  git -C i2pd verify-tag "${I2PD_VERSION}" && \
+  test "$(git -C i2pd rev-parse HEAD)" = "$(git -C i2pd rev-parse "${I2PD_VERSION}^{commit}")"
+
+WORKDIR /src/i2pd
 
 # Compile static i2pd
 RUN make -j"$(nproc)" LDFLAGS=-static USE_UPNP=no && \
