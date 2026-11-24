@@ -10,6 +10,7 @@ on:
   pull_request:
     branches:
       - "main"
+      - "deps"
     paths:
       - "Dockerfile"
       - ".github/workflows/publish-image.yaml"
